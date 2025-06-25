@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Upload & View PPT Online</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; }
+  input, button { padding: 8px; font-size: 16px; }
+  ul { list-style: none; padding-left: 0; }
+  li { margin: 8px 0; cursor: pointer; color: blue; text-decoration: underline; }
+  iframe { width: 100%; height: 600px; border: 1px solid #ccc; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<h1>Upload File PPT & Lihat Daftar</h1>
+<form id="uploadForm">
+  <input type="file" id="fileInput" accept=".ppt,.pptx" />
+  <button type="submit">Upload</button>
+</form>
+
+<h2>Daftar File PPT</h2>
+<ul id="fileList"></ul>
+
+<iframe id="pptViewer" src="" allowfullscreen></iframe>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script>
+  // Ganti konfigurasi ini dengan milikmu dari Firebase Console → Project Settings
+  const firebaseConfig = {
+    apiKey: "API_KEY",
+    authDomain: "PROJECT_ID.firebaseapp.com",
+    projectId: "PROJECT_ID",
+    storageBucket: "PROJECT_ID.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const storage = firebase.storage();
+  const db = firebase.firestore();
+
+  const uploadForm = document.getElementById('uploadForm');
+  const fileInput = document.getElementById('fileInput');
+  const fileList = document.getElementById('fileList');
+  const pptViewer = document.getElementById('pptViewer');
+
+  // Fungsi render daftar file dari Firestore
+  function renderList() {
+    fileList.innerHTML = '';
+    db.collection('pptFiles').orderBy('uploadedAt', 'desc').get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const li = document.createElement('li');
+          li.textContent = data.name;
+          li.onclick = () => {
+            const embedUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(data.url);
+            pptViewer.src = embedUrl;
+          };
+          fileList.appendChild(li);
+        });
+      });
+  }
+
+  renderList();
+
+  // Event submit upload file
+  uploadForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const file = fileInput.files[0];
+    if (!file) {
+      alert('Pilih file PPT terlebih dahulu');
+      return;
+    }
+
+    const storageRef = storage.ref('pptFiles/' + file.name);
+    const uploadTask = storageRef.put(file);
+
+    uploadTask.on('state_changed',
+      snapshot => {
+        // Optional: bisa tambahkan progress bar di sini
+      },
+      error => {
+        alert('Upload gagal: ' + error.message);
+      },
+      () => {
+        uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+          db.collection('pptFiles').add({
+            name: file.name,
+            url: downloadURL,
+            uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(() => {
+            alert('File berhasil diupload!');
+            fileInput.value = '';
+            renderList();
+          });
+        });
+      }
+    );
+  });
+</script>
+
+</body>
+</html>
