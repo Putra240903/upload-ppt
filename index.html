@@ -15,34 +15,23 @@
 <h1>Upload File PPT ke Google Drive</h1>
 <form id="uploadForm">
   <input type="file" id="pptFile" name="file" accept=".ppt,.pptx" required />
-  <input type="text" id="fileName" name="name" placeholder="Nama file (opsional)">
   <button type="submit">Upload</button>
 </form>
 
 <div id="result"></div>
 
 <script>
-const form = document.getElementById("uploadForm");
-form.addEventListener("submit", async (e) => {
+document.getElementById("uploadForm").addEventListener("submit", function(e) {
   e.preventDefault();
   const fileInput = document.getElementById("pptFile");
-  const nameInput = document.getElementById("fileName");
   const file = fileInput.files[0];
-  const name = nameInput.value || file.name;
-
   const reader = new FileReader();
-  reader.onload = async function() {
-    const url = "https://script.google.com/macros/s/AKfycbxRh0js3K3C8WgjsAvofMW76clwzckqQ7jtNcm1QE2TaoS_dlbZOhm3Y2F485R1skI6/exec";
-    const boundary = "-------314159265358979323846";
-    const body =
-      `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${file.name}"\r\nContent-Type: ${file.type}\r\n\r\n` +
-      reader.result +
-      `\r\n--${boundary}--`;
 
-    const response = await fetch(url, {
+  reader.onload = async function() {
+    const base64 = reader.result.split(',')[1]; // ambil base64-nya saja
+    const response = await fetch("https://script.google.com/macros/s/AKfycbzU72LnMMMFVchpxOT1NRwsHzQLXYf_UV0B3G7TmrXERwgyXS1E0mJTD0W4fytB1bEl/exec", {
       method: "POST",
-      headers: { "Content-Type": `multipart/form-data; boundary=${boundary}` },
-      body
+      body: base64
     });
 
     const result = await response.json();
@@ -56,7 +45,8 @@ form.addEventListener("submit", async (e) => {
       document.getElementById("result").innerText = "Gagal upload: " + result.message;
     }
   };
-  reader.readAsBinaryString(file);
+
+  reader.readAsDataURL(file);
 });
 </script>
 
