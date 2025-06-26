@@ -29,7 +29,7 @@ document.getElementById("uploadForm").addEventListener("submit", function(e) {
 
   reader.onload = async function() {
     const base64 = reader.result.split(',')[1]; // ambil base64-nya saja
-    const response = await fetch("https://script.google.com/macros/library/d/1WPay5C-p4OsSNO3D-tDQlh4wNUMeAFHfdh0ksh-pnmHm_ceCYXvqdGwL/3", {
+    const response = await fetch("https://script.google.com/macros/s/AKfycbxsjA84_SHrpJUgIZOx6YYQtM1y7Lz7O9VFSGtw5MEDTpi7aiFu5tXwh8iCt-MmyD5D/exec", {
       method: "POST",
       body: base64
     });
