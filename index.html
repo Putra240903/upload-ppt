@@ -1,3 +1,18 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload PPT ke Google Drive</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
+    input, button { padding: 10px; margin: 10px 0; display: block; width: 100%; }
+    iframe { width: 100%; height: 500px; margin-top: 20px; }
+    #result a { display: block; margin-top: 10px; color: blue; text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<h1>Upload File PPT ke Google Drive</h1>
 <form id="uploadForm">
   <input type="file" id="pptFile" name="file" accept=".ppt,.pptx" required />
   <input type="text" id="fileName" name="name" placeholder="Nama file (opsional)">
@@ -17,10 +32,14 @@ form.addEventListener("submit", async (e) => {
 
   const reader = new FileReader();
   reader.onload = async function() {
+    const url = "https://script.google.com/macros/s/AKfycbzxB3CjJ5PiTq3uiv1loOZTkWzd4x8pfS9Yn8cpdDjzWV05OwceXSfx1G-oWrfAfjGm/exec";
     const boundary = "-------314159265358979323846";
-    const body = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${file.name}"\r\nContent-Type: ${file.type}\r\n\r\n${reader.result}\r\n--${boundary}--`;
+    const body =
+      `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${file.name}"\r\nContent-Type: ${file.type}\r\n\r\n` +
+      reader.result +
+      `\r\n--${boundary}--`;
 
-    const response = await fetch("URL_WEB_APP_MU", {
+    const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": `multipart/form-data; boundary=${boundary}` },
       body
@@ -29,15 +48,17 @@ form.addEventListener("submit", async (e) => {
     const result = await response.json();
     if (result.status === "success") {
       document.getElementById("result").innerHTML = `
-        <p>Berhasil upload!</p>
-        <a href="${result.url}" target="_blank">Buka file di Drive</a><br>
-        <iframe src="${result.embed}" width="100%" height="500px"></iframe>
+        <p><strong>Upload berhasil!</strong></p>
+        <a href="${result.url}" target="_blank">Lihat di Google Drive</a>
+        <iframe src="${result.embed}"></iframe>
       `;
     } else {
-      document.getElementById("result").textContent = "Gagal upload: " + result.message;
+      document.getElementById("result").innerText = "Gagal upload: " + result.message;
     }
   };
   reader.readAsBinaryString(file);
 });
 </script>
 
+</body>
+</html>
