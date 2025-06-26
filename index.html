@@ -1,1 +1,43 @@
+<form id="uploadForm">
+  <input type="file" id="pptFile" name="file" accept=".ppt,.pptx" required />
+  <input type="text" id="fileName" name="name" placeholder="Nama file (opsional)">
+  <button type="submit">Upload</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+const form = document.getElementById("uploadForm");
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fileInput = document.getElementById("pptFile");
+  const nameInput = document.getElementById("fileName");
+  const file = fileInput.files[0];
+  const name = nameInput.value || file.name;
+
+  const reader = new FileReader();
+  reader.onload = async function() {
+    const boundary = "-------314159265358979323846";
+    const body = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${file.name}"\r\nContent-Type: ${file.type}\r\n\r\n${reader.result}\r\n--${boundary}--`;
+
+    const response = await fetch("URL_WEB_APP_MU", {
+      method: "POST",
+      headers: { "Content-Type": `multipart/form-data; boundary=${boundary}` },
+      body
+    });
+
+    const result = await response.json();
+    if (result.status === "success") {
+      document.getElementById("result").innerHTML = `
+        <p>Berhasil upload!</p>
+        <a href="${result.url}" target="_blank">Buka file di Drive</a><br>
+        <iframe src="${result.embed}" width="100%" height="500px"></iframe>
+      `;
+    } else {
+      document.getElementById("result").textContent = "Gagal upload: " + result.message;
+    }
+  };
+  reader.readAsBinaryString(file);
+});
+</script>
 
